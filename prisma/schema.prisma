@@ -1,0 +1,160 @@
+// Configuración de base de datos
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Modelo accounts
+model accounts {
+  id                Int              @id @default(autoincrement())
+  username          String           @db.VarChar(40)
+  firstanme         String           @db.VarChar(40)
+  lastName          String           @db.VarChar(40)
+  email             String           @db.VarChar(50)
+  emailVerified     Boolean          @default(false)
+  enabled           String           @db.VarChar(30)
+  password          String           @db.VarChar(255)
+  createdTimestamp  DateTime
+  users_profiles    users_profiles[]  // Relación uno a muchos
+}
+
+// Modelo areas
+model areas {
+  id           Int         @id @default(autoincrement())
+  name         String      @db.VarChar(50)
+  icon         String      @db.VarChar(30)
+  color        String      @db.VarChar(10)
+  properties   properties  @relation(fields: [properties_id], references: [id])
+  properties_id Int
+  users_devices users_devices[]
+}
+
+// Modelo categories
+model categories {
+  id             Int       @id @default(autoincrement())
+  categoryName   String    @db.VarChar(30)
+  categoryIcon   String    @db.VarChar(30)
+  devices        devices[]
+}
+
+// Modelo devices
+model devices {
+  id           Int           @id @default(autoincrement())
+  name         String        @db.VarChar(30)
+  description  String        @db.VarChar(50)
+  image_url    String        @db.VarChar(255)
+  brand        String        @db.VarChar(30)
+  model        String        @db.VarChar(30)
+  categories   categories    @relation(fields: [categories_id], references: [id])
+  categories_id Int
+  type         String        @db.VarChar(30)
+  spec         Json
+  users_devices users_devices[]
+}
+
+// Modelo events
+model events {
+  id             Int         @id @default(autoincrement())
+  title          String      @db.VarChar(30)
+  description    String      @db.VarChar(30)
+  timestamp      DateTime
+  events_type    events_type @relation(fields: [events_type_id], references: [id])
+  events_type_id Int
+  properties     properties[]
+}
+
+// Modelo events_type
+model events_type {
+  id        Int      @id @default(autoincrement())
+  type      String   @db.VarChar(30)
+  events    events[]
+}
+
+// Modelo notifications
+model notifications {
+  id                  Int                @id @default(autoincrement())
+  content             String             @db.Text
+  notifications_type  notifications_type @relation(fields: [notifications_type_id], references: [id])
+  notifications_type_id Int
+  users_profiles      users_profiles     @relation(fields: [users_profiles_id], references: [id])
+  users_profiles_id   Int
+}
+
+// Modelo notifications_type
+model notifications_type {
+  id             Int               @id @default(autoincrement())
+  type           String            @db.VarChar(50)
+  notifications  notifications[]
+}
+
+// Modelo payments
+model payments {
+  id                Int          @id @default(autoincrement())
+  amount            Float
+  payment_method    String       @db.VarChar(50)
+  transaction_id    String       @db.VarChar(500)
+  subscriptions     subscriptions @relation(fields: [subscriptions_id], references: [id])
+  subscriptions_id  Int
+}
+
+// Modelo properties
+model properties {
+  id               Int             @id @default(autoincrement())
+  name             String          @db.VarChar(30)
+  image_url        String          @db.VarChar(255)
+  address          String          @db.VarChar(100)
+  events           events          @relation(fields: [events_id], references: [id])
+  events_id        Int
+  users_profiles   users_profiles  @relation(fields: [users_profiles_id], references: [id])
+  users_profiles_id Int
+  areas            areas[]
+}
+
+// Modelo subscriptions
+model subscriptions {
+  id                Int              @id @default(autoincrement())
+  start_date        DateTime
+  end_date          DateTime
+  subscription_plans subscriptions_plans @relation(fields: [subscription_plans_id], references: [id])
+  subscription_plans_id Int
+  users_profiles    users_profiles   @relation(fields: [users_profiles_id], references: [id])
+  users_profiles_id Int
+  payments          payments[]
+}
+
+// Modelo subscriptions_plans
+model subscriptions_plans {
+  id                  Int              @id @default(autoincrement())
+  subscription_plan   String           @db.VarChar(50)
+  subscriptions       subscriptions[]
+}
+
+// Modelo users_devices
+model users_devices {
+  devices        devices       @relation(fields: [devices_id], references: [id])
+  devices_id     Int
+  areas          areas         @relation(fields: [areas_id], references: [id])
+  areas_id       Int
+  users_profiles users_profiles @relation(fields: [users_profiles_id], references: [id])
+  users_profiles_id Int
+  @@id([devices_id, areas_id, users_profiles_id])
+}
+
+// Modelo users_profiles
+model users_profiles {
+  id             Int           @id @default(autoincrement())
+  phone          String        @db.VarChar(9)
+  dni            String        @db.VarChar(8)
+  photo_url      String        @db.VarChar(255)
+  occupation     String        @db.VarChar(30)
+  accounts       accounts      @relation(fields: [accounts_id], references: [id])
+  accounts_id    Int
+  properties     properties[]
+  subscriptions  subscriptions[]
+  notifications  notifications[]
+  users_devices  users_devices[]
+}
